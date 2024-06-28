@@ -1,6 +1,7 @@
 import requests
 import csv
 import time
+import os
 
 def fetch_recordings(query, page=1):
     url = f"https://xeno-canto.org/api/2/recordings?query={query}&page={page}"
@@ -14,22 +15,32 @@ def save_to_csv(data, filename):
         return
 
     keys = data[0].keys()
+    directory = os.path.dirname(filename)
+    if directory:
+        os.makedirs(directory, exist_ok=True)  # Ensure the directory exists
+
     with open(filename, 'w', newline='', encoding='utf-8') as output_file:
         dict_writer = csv.DictWriter(output_file, fieldnames=keys)
         dict_writer.writeheader()
         dict_writer.writerows(data)
 
 def main():
-    query = "cnt:\"United States\""  # You can change this query to something else, e.g., "cnt:brazil" or a specific species
+    query = "cnt:\"United States\""  # Adjust this query as needed
     all_recordings = []
     page = 1
     rate_limit = 1  # seconds between requests
+    max_pages = None  # Initialize max_pages to None
 
     while True:
         try:
             print(f"Fetching page {page} with query '{query}'...")
             data = fetch_recordings(query, page)
-            print(f"Response for page {page}: {data}")  # Log the response for debugging
+
+            if max_pages is None:
+                max_pages = int(data.get('numPages', 0))  # Update max_pages based on the first response
+                if max_pages == 0:
+                    print("No recordings found.")
+                    break
 
             recordings = data.get('recordings', [])
             if not recordings:
@@ -52,6 +63,10 @@ def main():
                 all_recordings.append(bird_data)
             
             page += 1
+            if page > max_pages:
+                print("All available pages have been fetched.")
+                break
+
             time.sleep(rate_limit)
         except requests.exceptions.RequestException as e:
             print(f"An error occurred: {e}")
