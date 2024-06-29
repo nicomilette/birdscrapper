@@ -4,7 +4,7 @@ import requests
 from urllib.parse import urlparse
 
 # Load the filtered dataset
-file_path = './new_filtered_bird_recordings.csv'  # Update this path to your filtered dataset
+file_path = './new_filtered_bird_recordings_cleaned.csv'  # Update this path to your filtered dataset
 bird_data = pd.read_csv(file_path)
 
 # Directory to save the recordings
