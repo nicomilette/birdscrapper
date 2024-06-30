@@ -26,17 +26,17 @@ if __name__ == "__main__":
         elif choice == '2':
             execute_script('src/heatmap')
         elif choice == '3':
-            execute_script('src/recordingstats')
+            execute_script('src/stats')
         elif choice == '4':
             execute_script('src/filter')
         elif choice == '5':
-            execute_script('src/downloadrecordings')
+            execute_script('src/download')
         elif choice == '6':
-            execute_script('src/converttospectrogram')
+            execute_script('src/spectrograms')
         elif choice == '7':
-            execute_script('src/preprocessaudio')
+            execute_script('src/preprocess')
         elif choice == '8':
-            execute_script("src/trainandsave")
+            execute_script("src/train")
         elif choice == '9':
             print("Exiting the program.")
             break
