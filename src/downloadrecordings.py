@@ -50,6 +50,6 @@ for index, row in bird_data.iterrows():
     download_recording(recording_url, output_path)
     downloaded_recordings += 1
     progress_percentage = (downloaded_recordings / total_recordings) * 100
-    print(f"Downloaded {file_name} ({progress_percentage:.2f}% complete)")
+    print(f"Downloaded {file_name} \n({progress_percentage:.2f}% complete)")
 
 print("All recordings downloaded.")
