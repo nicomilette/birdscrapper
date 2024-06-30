@@ -14,24 +14,54 @@ def create_spectrogram(file_info):
     if os.path.exists(output_path):
         if lock:
             with lock:
+                progress['completed'] += 1
                 progress_percentage = (progress['completed'] / total_files) * 100
                 print(f"File {file_name} already processed. Skipping conversion.")
                 print(f"Processed {progress['completed']}/{total_files} files ({progress_percentage:.2f}% complete)")
         else:
+            progress['completed'] += 1
             progress_percentage = (progress['completed'] / total_files) * 100
             print(f"File {file_name} already processed. Skipping conversion.")
             print(f"Processed {progress['completed']}/{total_files} files ({progress_percentage:.2f}% complete)")
         return file_name, False
 
-    y, sr = librosa.load(input_path, sr=None)
-    plt.figure(figsize=(10, 4))
-    S = librosa.feature.melspectrogram(y=y, sr=sr)
-    S_DB = librosa.power_to_db(S, ref=np.max)
-    librosa.display.specshow(S_DB, sr=sr, x_axis='time', y_axis='mel')
-    plt.axis('off')
-    plt.tight_layout(pad=0)
-    plt.savefig(output_path, bbox_inches='tight', pad_inches=0)
-    plt.close()
+    if not os.path.exists(input_path):
+        if lock:
+            with lock:
+                progress['completed'] += 1
+                progress_percentage = (progress['completed'] / total_files) * 100
+                print(f"File {file_name} does not exist. Skipping.")
+                print(f"Processed {progress['completed']}/{total_files} files ({progress_percentage:.2f}% complete)")
+        else:
+            progress['completed'] += 1
+            progress_percentage = (progress['completed'] / total_files) * 100
+            print(f"File {file_name} does not exist. Skipping.")
+            print(f"Processed {progress['completed']}/{total_files} files ({progress_percentage:.2f}% complete)")
+        return file_name, False
+
+    try:
+        y, sr = librosa.load(input_path, sr=None)
+        plt.figure(figsize=(10, 4))
+        S = librosa.feature.melspectrogram(y=y, sr=sr)
+        S_DB = librosa.power_to_db(S, ref=np.max)
+        librosa.display.specshow(S_DB, sr=sr, x_axis='time', y_axis='mel')
+        plt.axis('off')
+        plt.tight_layout(pad=0)
+        plt.savefig(output_path, bbox_inches='tight', pad_inches=0)
+        plt.close()
+    except Exception as e:
+        if lock:
+            with lock:
+                progress['completed'] += 1
+                progress_percentage = (progress['completed'] / total_files) * 100
+                print(f"Error processing file {file_name}: {e}")
+                print(f"Processed {progress['completed']}/{total_files} files \n({progress_percentage:.2f}% complete)")
+        else:
+            progress['completed'] += 1
+            progress_percentage = (progress['completed'] / total_files) * 100
+            print(f"Error processing file {file_name}: {e}")
+            print(f"Processed {progress['completed']}/{total_files} files \n({progress_percentage:.2f}% complete)")
+        return file_name, False
 
     if lock:
         with lock:

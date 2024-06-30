@@ -5,3 +5,5 @@ pathlib
 pandas
 requests
 tensorflow
+noisereduce
+scikit-image

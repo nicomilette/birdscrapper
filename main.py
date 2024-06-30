@@ -3,13 +3,14 @@ import os
 def main_menu():
     print("Select an option:")
     print("1. Scrape Data")
-    print("2. Generate Heatmap")
-    print("3. Generate Recording Statistics")
+    print("2. Generate Heatmap - Optional")
+    print("3. Generate Recording Statistics - Optional")
     print("4. Filter Recordings")
     print("5. Download Recordings")
     print("6. Create Spectrograms")
-    print("7. Train and Save Model")
-    print("8. Exit")
+    print("7. Clean Data")
+    print("8. Train and Save Model")
+    print("9. Exit")
 
 def execute_script(script_name):
     command = f"python {script_name}.py"
@@ -33,8 +34,10 @@ if __name__ == "__main__":
         elif choice == '6':
             execute_script('src/converttospectrogram')
         elif choice == '7':
-            execute_script('src/trainandsave')
+            execute_script('src/preprocessaudio')
         elif choice == '8':
+            execute_script("src/trainandsave")
+        elif choice == '9':
             print("Exiting the program.")
             break
         else:
