@@ -1,6 +1,4 @@
 
----
-
 # birdscrapper 
 
 ## Description
@@ -53,5 +51,3 @@ The project includes several statistical analyses and visualizations, such as:
 ## Data Licensing
 
 The data scraped by these scripts is licensed under the Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0). For more information, visit [Creative Commons License](https://creativecommons.org/licenses/by-nc-sa/4.0/).
-
----
