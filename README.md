@@ -22,7 +22,7 @@ These scripts are designed to scrape bird call recordings, generate spectrograms
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/nicomilette/birdscrapper.git
+   git clone https://github.com/nicomilette/birdscripts.git
    ```
 
 2. Install the required dependencies:
