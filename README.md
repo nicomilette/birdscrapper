@@ -41,13 +41,6 @@ Run the main script to access all functionalities via a menu:
 python main.py
 ```
 
-## Statistics and Analysis
-
-The project includes several statistical analyses and visualizations, such as:
-- Number of recordings per bird species
-- Average number of recordings
-- Species with maximum and minimum geographical coordinates
-
 ## Data Licensing
 
 The data scraped by these scripts is licensed under the Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0). For more information, visit [Creative Commons License](https://creativecommons.org/licenses/by-nc-sa/4.0/).
