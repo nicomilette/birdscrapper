@@ -1,0 +1,7 @@
+librosa
+numpy
+matplotlib
+pathlib
+pandas
+requests
+tensorflow

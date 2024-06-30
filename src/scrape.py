@@ -72,8 +72,12 @@ def main():
             print(f"An error occurred: {e}")
             break
 
-    save_to_csv(all_recordings, 'bird_recordings.csv')
-    print("Data saved to bird_recordings.csv")
+    # Get the current script directory and construct the full path to the CSV file
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    output_file_path = os.path.join(current_dir, '..', 'tables', 'bird_recordings.csv')
+
+    save_to_csv(all_recordings, output_file_path)
+    print(f"Data saved to {output_file_path}")
 
 if __name__ == "__main__":
     main()

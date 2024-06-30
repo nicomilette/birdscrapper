@@ -1,14 +1,14 @@
 import os
 import pandas as pd
 import requests
-from urllib.parse import urlparse
 
 # Load the filtered dataset
-file_path = './new_filtered_bird_recordings_cleaned.csv'  # Update this path to your filtered dataset
+current_dir = os.path.dirname(os.path.abspath(__file__))
+file_path = os.path.join(current_dir, '..', 'tables', 'new_filtered_bird_recordings_cleaned.csv')
 bird_data = pd.read_csv(file_path)
 
 # Directory to save the recordings
-output_dir = 'bird_recordings'
+output_dir = os.path.join(current_dir, '..', 'bird_recordings')
 os.makedirs(output_dir, exist_ok=True)
 
 # Function to clean file name
@@ -50,6 +50,6 @@ for index, row in bird_data.iterrows():
     download_recording(recording_url, output_path)
     downloaded_recordings += 1
     progress_percentage = (downloaded_recordings / total_recordings) * 100
-    print(f"Downloaded {file_name} \n({progress_percentage:.2f}% complete)")
+    print(f"Downloaded {file_name} ({progress_percentage:.2f}% complete)")
 
 print("All recordings downloaded.")

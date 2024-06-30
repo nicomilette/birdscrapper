@@ -1,7 +1,13 @@
+import os
 import pandas as pd
 
+# Get the current working directory
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Construct the path to the CSV file
+file_path = os.path.join(current_dir, '..', 'tables', 'bird_recordings.csv')
+
 # Load the dataset
-file_path = './bird_recordings.csv'
 bird_data = pd.read_csv(file_path)
 
 # Drop rows with missing common names
@@ -26,5 +32,10 @@ filtered_data_step1 = bird_data_cleaned[~bird_data_cleaned['common_name'].isin(s
 species_with_sufficient_recordings = recordings_per_species[recordings_per_species >= 20].index
 filtered_data = filtered_data_step1[filtered_data_step1['common_name'].isin(species_with_sufficient_recordings)]
 
+# Construct the path to save the filtered dataset
+filtered_file_path = os.path.join(current_dir, '..', 'tables', 'new_filtered_bird_recordings.csv')
+
 # Save the filtered dataset
-filtered_data.to_csv('new_filtered_bird_recordings.csv', index=False)
+filtered_data.to_csv(filtered_file_path, index=False)
+
+print(f"Filtered data saved to {filtered_file_path}")
