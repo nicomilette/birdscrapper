@@ -14,12 +14,10 @@ def create_spectrogram(file_info):
     if os.path.exists(output_path):
         if lock:
             with lock:
-                progress['completed'] += 1
                 progress_percentage = (progress['completed'] / total_files) * 100
                 print(f"File {file_name} already processed. Skipping conversion.")
                 print(f"Processed {progress['completed']}/{total_files} files ({progress_percentage:.2f}% complete)")
         else:
-            progress['completed'] += 1
             progress_percentage = (progress['completed'] / total_files) * 100
             print(f"File {file_name} already processed. Skipping conversion.")
             print(f"Processed {progress['completed']}/{total_files} files ({progress_percentage:.2f}% complete)")
@@ -28,12 +26,10 @@ def create_spectrogram(file_info):
     if not os.path.exists(input_path):
         if lock:
             with lock:
-                progress['completed'] += 1
                 progress_percentage = (progress['completed'] / total_files) * 100
                 print(f"File {file_name} does not exist. Skipping.")
                 print(f"Processed {progress['completed']}/{total_files} files ({progress_percentage:.2f}% complete)")
         else:
-            progress['completed'] += 1
             progress_percentage = (progress['completed'] / total_files) * 100
             print(f"File {file_name} does not exist. Skipping.")
             print(f"Processed {progress['completed']}/{total_files} files ({progress_percentage:.2f}% complete)")

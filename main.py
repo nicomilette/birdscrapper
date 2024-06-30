@@ -8,7 +8,7 @@ def main_menu():
     print("4. Filter Recordings")
     print("5. Download Recordings")
     print("6. Create Spectrograms")
-    print("7. Clean Data")
+    print("7. Preprocess Data")
     print("8. Train and Save Model")
     print("9. Exit")
 
