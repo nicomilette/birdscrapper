@@ -1,14 +1,11 @@
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
-
-# Get the current script directory
-current_dir = os.path.dirname(os.path.abspath(__file__))
-
-# Construct the full path to the CSV file
-file_path = os.path.join(current_dir, '..', 'tables', 'bird_recordings.csv')
+import config
 
 # Load the CSV file
+current_dir = os.path.dirname(os.path.abspath(__file__))
+file_path = os.path.join(current_dir, config.CSV_UNFILTERED)
 bird_data = pd.read_csv(file_path)
 
 # Check if required columns are present

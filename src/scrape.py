@@ -2,6 +2,7 @@ import requests
 import csv
 import time
 import os
+import config
 
 def fetch_recordings(query, page=1):
     url = f"https://xeno-canto.org/api/2/recordings?query={query}&page={page}"
@@ -33,7 +34,6 @@ def main():
 
     while True:
         try:
-            print(f"Fetching page {page} with query '{query}'...")
             data = fetch_recordings(query, page)
 
             if max_pages is None:
@@ -67,17 +67,18 @@ def main():
                 print("All available pages have been fetched.")
                 break
 
+            # Calculate and print progress percentage
+            progress_percentage = (page / max_pages) * 100
+            print(f"{page}/{max_pages} pages fetched\n({progress_percentage:.2f}%)")
+
             time.sleep(rate_limit)
         except requests.exceptions.RequestException as e:
             print(f"An error occurred: {e}")
             break
-
-    # Get the current script directory and construct the full path to the CSV file
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    output_file_path = os.path.join(current_dir, '..', 'tables', 'bird_recordings.csv')
-
-    save_to_csv(all_recordings, output_file_path)
-    print(f"Data saved to {output_file_path}")
+    file_path = os.path.join(current_dir, config.CSV_UNFILTERED)
+    save_to_csv(all_recordings, file_path)
+    print(f"Data saved to {config.CSV_UNFILTERED}")
 
 if __name__ == "__main__":
     main()

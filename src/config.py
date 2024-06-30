@@ -1,10 +1,17 @@
-# config.py
+# Path to the CSV file for the first uncleaned scrape
+CSV_UNFILTERED = '../tables/bird_recordings_unfiltered.csv'
+# Path to the CSV file for the filtered table
+CSV_FILTERED = '../tables/bird_recordings_filtered.csv'
 
-# Path to the CSV file
-CSV_FILE_PATH = '../tables/bird_recordings.csv'
+
+
+# Path to the CSV file used for the heatmap
+CSV_FILE_PATH_HEATMAP = '../tables/bird_recordings_filtered.csv'
+# Path to the CSV file used for the statistics
+CSV_FILE_PATH_STATS = '../tables/bird_recordings_filtered.csv'
 
 # Statistics thresholds and parameters
-MIN_RECORDINGS_THRESHOLD = 10
+MIN_RECORDINGS_THRESHOLD = 50
 FIGURE_SIZE = (10, 6)
 BAR_COLOR = 'blue'
 ROTATION = 90

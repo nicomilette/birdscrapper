@@ -101,7 +101,7 @@ def process_files_sequentially(input_dir, output_dir):
     for file_info in file_info_list:
         create_spectrogram(file_info)
 
-    print("All files processed.")
+    print("Spectrograms finished converting.")
 
 if __name__ == '__main__':
     current_dir = os.path.dirname(os.path.abspath(__file__))

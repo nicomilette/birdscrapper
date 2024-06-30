@@ -7,7 +7,7 @@ import config
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
 # Construct the full path to the CSV file using the config variable
-file_path = os.path.join(current_dir, config.CSV_FILE_PATH)
+file_path = os.path.join(current_dir, config.CSV_FILE_PATH_STATS)
 
 # Load the CSV file
 bird_data = pd.read_csv(file_path)
@@ -15,7 +15,7 @@ bird_data = pd.read_csv(file_path)
 # Calculate the number of recordings for each bird
 recordings_per_bird = bird_data['common_name'].value_counts()
 
-species_less_than_10_recordings = recordings_per_bird[recordings_per_bird < config.MIN_RECORDINGS_THRESHOLD].count()
+species_less_than_x_recordings = recordings_per_bird[recordings_per_bird < config.MIN_RECORDINGS_THRESHOLD].count()
 average_recordings = recordings_per_bird.mean()
 lowest_recordings = recordings_per_bird.min()
 highest_recordings = recordings_per_bird.max()
@@ -32,7 +32,7 @@ summary_stats = {
     'Lowest Recordings': lowest_recordings,
     'Highest Recordings': highest_recordings,
     'Total Unique Birds': len(recordings_per_bird),
-    'Number of species with less than 10 recordings': species_less_than_10_recordings,
+    f'Number of species with less than {config.MIN_RECORDINGS_THRESHOLD} recordings': species_less_than_x_recordings,
     'Species with Maximum Latitude': species_with_max_latitude,
     'Species with Minimum Longitude': species_with_min_longitude,
     'Average Latitude': average_latitude,

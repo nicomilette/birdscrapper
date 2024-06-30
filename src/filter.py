@@ -1,41 +1,53 @@
 import os
 import pandas as pd
+import config
 
-# Get the current working directory
-current_dir = os.path.dirname(os.path.abspath(__file__))
+def filter_recordings(data):
+    # Remove rows with missing common names
+    filtered_data = data.dropna(subset=['common_name'])
 
-# Construct the path to the CSV file
-file_path = os.path.join(current_dir, '..', 'tables', 'bird_recordings.csv')
+    # Filter out entries with the common name "identity unknown"
+    filtered_data = filtered_data[
+        ~filtered_data['common_name'].str.lower().isin(['identity unknown', 'soundscape'])
+    ]
 
-# Load the dataset
-bird_data = pd.read_csv(file_path)
+    # Filter out species with less than 20 recordings
+    species_recordings = filtered_data['scientific_name'].value_counts()
+    species_to_keep = species_recordings[species_recordings >= 20].index
+    filtered_data = filtered_data[filtered_data['scientific_name'].isin(species_to_keep)]
 
-# Drop rows with missing common names
-bird_data_cleaned = bird_data.dropna(subset=['common_name'])
+    return filtered_data
 
-# Count the number of recordings per species
-recordings_per_species = bird_data_cleaned['common_name'].value_counts()
+def save_to_csv(data, filename):
+    if data.empty:
+        print("No data to save.")
+        return
 
-# Identify the top species and new max count
-top_species = recordings_per_species.idxmax()
-top_count = recordings_per_species.max()
-new_max_count = recordings_per_species[recordings_per_species != top_count].max()
+    directory = os.path.dirname(filename)
+    if directory:
+        os.makedirs(directory, exist_ok=True)  # Ensure the directory exists
 
-# Identify species to be excluded due to having too many recordings (excluding the top species)
-species_to_exclude = recordings_per_species[recordings_per_species > new_max_count].index.tolist()
-species_to_exclude = [species for species in species_to_exclude if species != top_species]
+    data.to_csv(filename, index=False, encoding='utf-8')
+    print(f"Data saved to {filename}")
 
-# Filter the dataset to exclude these species
-filtered_data_step1 = bird_data_cleaned[~bird_data_cleaned['common_name'].isin(species_to_exclude)]
+def main():
+    current_dir = os.path.dirname(os.path.abspath(__file__))
 
-# Filter out species with fewer than 20 recordings
-species_with_sufficient_recordings = recordings_per_species[recordings_per_species >= 20].index
-filtered_data = filtered_data_step1[filtered_data_step1['common_name'].isin(species_with_sufficient_recordings)]
+    file_path = os.path.join(current_dir, config.CSV_UNFILTERED)
 
-# Construct the path to save the filtered dataset
-filtered_file_path = os.path.join(current_dir, '..', 'tables', 'new_filtered_bird_recordings.csv')
+    # Load the unfiltered data
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"File not found: {file_path}")
 
-# Save the filtered dataset
-filtered_data.to_csv(filtered_file_path, index=False)
+    bird_data = pd.read_csv(file_path)
 
-print(f"Filtered data saved to {filtered_file_path}")
+    # Filter the data
+    filtered_data = filter_recordings(bird_data)
+
+    output_path = os.path.join(current_dir, config.CSV_FILTERED)
+
+    # Save the filtered data to the new CSV file
+    save_to_csv(filtered_data, output_path)
+
+if __name__ == "__main__":
+    main()

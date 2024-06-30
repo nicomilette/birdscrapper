@@ -1,10 +1,11 @@
 import os
 import pandas as pd
 import requests
+import config
 
 # Load the filtered dataset
 current_dir = os.path.dirname(os.path.abspath(__file__))
-file_path = os.path.join(current_dir, '..', 'tables', 'new_filtered_bird_recordings_cleaned.csv')
+file_path = os.path.join(current_dir, config.CSV_FILTERED)
 bird_data = pd.read_csv(file_path)
 
 # Directory to save the recordings
