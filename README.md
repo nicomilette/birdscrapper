@@ -38,7 +38,7 @@ Global configuration variables are stored in `src/config.py`. This file includes
 
 Run the main script to access all functionalities via a menu:
 ```bash
-python src/main.py
+python main.py
 ```
 
 ## Statistics and Analysis
