@@ -41,7 +41,6 @@ def preprocess_spectrogram(file_info):
 
     if os.path.exists(output_path):
         with lock:
-            progress['completed'] += 1
             progress_percentage = (progress['completed'] / total_files) * 100
             print(f"File {file_name} already processed. Skipping conversion.")
             print(f"Processed {progress['completed']}/{total_files} files \n({progress_percentage:.2f}% complete)")
@@ -50,7 +49,6 @@ def preprocess_spectrogram(file_info):
     spectrogram = load_spectrogram(file_path)
     if spectrogram is None:
         with lock:
-            progress['completed'] += 1
             progress_percentage = (progress['completed'] / total_files) * 100
             print(f"File {file_name} could not be loaded. Skipping.")
             print(f"Processed {progress['completed']}/{total_files} files \n({progress_percentage:.2f}% complete)")
@@ -60,7 +58,6 @@ def preprocess_spectrogram(file_info):
     mfccs = extract_mfcc(spectrogram, sr)
     if mfccs is None:
         with lock:
-            progress['completed'] += 1
             progress_percentage = (progress['completed'] / total_files) * 100
             print(f"MFCC extraction failed for file {file_name}. Skipping.")
             print(f"Processed {progress['completed']}/{total_files} files \n({progress_percentage:.2f}% complete)")
