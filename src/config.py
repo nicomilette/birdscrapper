@@ -6,9 +6,11 @@ CSV_FILTERED = '../tables/bird_recordings_filtered.csv'
 
 
 # Path to the CSV file used for the heatmap
-CSV_FILE_PATH_HEATMAP = '../tables/bird_recordings_filtered.csv'
+CSV_FILE_PATH_HEATMAP = CSV_UNFILTERED
 # Path to the CSV file used for the statistics
-CSV_FILE_PATH_STATS = '../tables/bird_recordings_filtered.csv'
+CSV_FILE_PATH_STATS = CSV_FILTERED
+
+HEATMAP_FILE = '../heatmaps/bird_recordings_heatmap.html'
 
 # Statistics thresholds and parameters
 MIN_RECORDINGS_THRESHOLD = 50

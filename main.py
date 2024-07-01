@@ -19,7 +19,7 @@ def execute_script(script_name):
 if __name__ == "__main__":
     while True:
         main_menu()
-        choice = input("Enter your choice (1-8): ")
+        choice = input("Enter your choice (1-9): ")
 
         if choice == '1':
             execute_script('src/scrape')

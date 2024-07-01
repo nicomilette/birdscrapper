@@ -7,3 +7,4 @@ requests
 tensorflow
 noisereduce
 scikit-image
+folium

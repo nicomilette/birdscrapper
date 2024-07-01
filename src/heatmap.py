@@ -1,23 +1,51 @@
+import webbrowser
+import os
+
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
+import folium
+from folium.plugins import HeatMap
 import config
 
-# Load the CSV file
 current_dir = os.path.dirname(os.path.abspath(__file__))
+
+
+# Load the CSV file
+print("Generating heatmap...")
+
 file_path = os.path.join(current_dir, config.CSV_UNFILTERED)
 bird_data = pd.read_csv(file_path)
 
-# Check if required columns are present
-required_columns = ['longitude', 'latitude']
-for column in required_columns:
-    if column not in bird_data.columns:
-        raise ValueError(f"Column '{column}' is missing from the CSV file")
+# Check for missing latitude and longitude and drop those rows
+bird_data = bird_data.dropna(subset=['latitude', 'longitude'])
 
-# Create a scatter plot of the bird recording locations
-plt.figure(figsize=(10, 6))
-plt.scatter(bird_data['longitude'], bird_data['latitude'], alpha=0.5, s=10, c='blue')
-plt.title('Scatter Plot of Bird Recording Locations')
-plt.xlabel('Longitude')
-plt.ylabel('Latitude')
-plt.show()
+# Create a base map centered at the mean latitude and longitude
+map_center = [bird_data['latitude'].mean(), bird_data['longitude'].mean()]
+base_map = folium.Map(location=map_center, zoom_start=5)
+
+# Add a heat map layer
+heat_data = [[row['latitude'], row['longitude']] for index, row in bird_data.iterrows()]
+HeatMap(heat_data).add_to(base_map)
+
+# Save the map as an HTML file
+
+html_file_path = os.path.join(current_dir, config.HEATMAP_FILE)
+directory = os.path.dirname(html_file_path)
+if directory:
+    os.makedirs(directory, exist_ok=True)  # Ensure the directory exists
+
+base_map.save(html_file_path)
+
+
+print("Opening heatmap...")
+# Define the path to the HTML file
+# Get the current script directory
+# Construct the full path to the CSV file using the config variable
+
+# Ensure the file exists
+if os.path.exists(html_file_path):
+    # Open the HTML file in the default web browser
+    webbrowser.open(f'file://{os.path.abspath(html_file_path)}')
+else:
+    print(f"The file {html_file_path} does not exist.")
