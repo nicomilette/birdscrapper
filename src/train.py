@@ -1,57 +1,84 @@
 import os
+import numpy as np
 import tensorflow as tf
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense
+from tensorflow.keras.layers import Dense, Dropout, Flatten, BatchNormalization, Input
+from tensorflow.keras.layers import Conv2D, MaxPooling2D
+from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
 
-# Ensure reproducibility
-tf.random.set_seed(42)
-
-# Step 2: Create a Dataset
-def create_dataset(data_dir, batch_size=32, img_height=180, img_width=180):
-    datagen = ImageDataGenerator(validation_split=0.2, rescale=1./255)
-    train_data = datagen.flow_from_directory(
-        data_dir,
-        target_size=(img_height, img_width),
-        batch_size=batch_size,
-        class_mode='categorical',
-        subset='training'
-    )
-    val_data = datagen.flow_from_directory(
-        data_dir,
-        target_size=(img_height, img_width),
-        batch_size=batch_size,
-        class_mode='categorical',
-        subset='validation'
-    )
-    return train_data, val_data
-
-# Adjust the path to your dataset
 current_dir = os.path.dirname(os.path.abspath(__file__))
-data_dir = os.path.join(current_dir, '..', 'spectrograms')
-train_data, val_data = create_dataset(data_dir)
+data_folder = os.path.join(current_dir, '../processed_mfccs')
 
-# Step 3: Train the Model
-model = Sequential([
-    Conv2D(32, (3, 3), activation='relu', input_shape=(180, 180, 3)),
-    MaxPooling2D((2, 2)),
-    Conv2D(64, (3, 3), activation='relu'),
-    MaxPooling2D((2, 2)),
-    Conv2D(128, (3, 3), activation='relu'),
-    MaxPooling2D((2, 2)),
-    Flatten(),
-    Dense(128, activation='relu'),
-    Dense(len(train_data.class_indices), activation='softmax')
-])
+# Load the data
+def load_data(data_folder):
+    X = []
+    y = []
+    files = [file for file in os.listdir(data_folder) if file.endswith('.npy')]
+    total_files = len(files)
 
-model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+    for i, file in enumerate(files):
+        mfccs = np.load(os.path.join(data_folder, file))
+        X.append(mfccs)
+        label = '_'.join(file.split('_')[:-1])  # Extract the label correctly
+        y.append(label)
+        
+        # Display progress
+        progress_percentage = (i + 1) / total_files * 100
+        print(f'Loading {label}\n({progress_percentage:.2f}% complete)')
+        
+    print()  # Move to the next line after completing the loop
+    return np.array(X), np.array(y)
 
-history = model.fit(train_data, validation_data=val_data, epochs=10)
+X, y = load_data(data_folder)
 
-# Step 4: Evaluate the Model
-test_loss, test_acc = model.evaluate(val_data, verbose=2)
-print(f'\nTest accuracy: {test_acc}')
+# Preprocess the data
+X = X[..., np.newaxis]  # Add a new axis for the channel dimension
+le = LabelEncoder()
+y_encoded = le.fit_transform(y)
+y_categorical = to_categorical(y_encoded)
 
-# Step 5: Save the Model
-model.save(os.path.join(current_dir, 'bird_call_classifier.h5'))
-print("Model saved to 'bird_call_classifier.h5'")
+# Split the data into training and test sets
+X_train, X_test, y_train, y_test = train_test_split(X, y_categorical, test_size=0.2, random_state=42)
+
+# Build the model
+model = Sequential()
+model.add(Input(shape=X_train.shape[1:]))
+model.add(Conv2D(32, kernel_size=(3, 3), activation='relu'))
+model.add(BatchNormalization())
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Dropout(0.25))
+
+model.add(Conv2D(64, kernel_size=(3, 3), activation='relu'))
+model.add(BatchNormalization())
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Dropout(0.25))
+
+model.add(Flatten())
+model.add(Dense(128, activation='relu'))
+model.add(BatchNormalization())
+model.add(Dropout(0.5))
+model.add(Dense(y_categorical.shape[1], activation='softmax'))
+
+# Compile the model
+optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
+model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
+
+# Callbacks
+early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
+model_checkpoint = ModelCheckpoint('bird_sound_model_best.keras', save_best_only=True)
+reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr=1e-6)
+
+# Train the model
+model.fit(X_train, y_train, batch_size=32, epochs=50, verbose=1, validation_data=(X_test, y_test),
+          callbacks=[early_stopping, model_checkpoint, reduce_lr])
+
+# Evaluate the model
+score = model.evaluate(X_test, y_test, verbose=0)
+print(f'Test loss: {score[0]}')
+print(f'Test accuracy: {score[1]}')
+
+# Save the final model
+model.save('bird_sound_model_final.keras')
