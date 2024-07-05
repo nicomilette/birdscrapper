@@ -4,13 +4,14 @@ import tensorflow as tf
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from tensorflow.keras.utils import to_categorical
-from tensorflow.keras.models import Sequential
+from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.layers import Dense, Dropout, Flatten, BatchNormalization, Input
 from tensorflow.keras.layers import Conv2D, MaxPooling2D
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 data_folder = os.path.join(current_dir, '../processed_mfccs')
+curr_model_path = os.path.join(current_dir, '../bird_sound_model_final.keras')
 
 # Load the data
 def load_data(data_folder):
@@ -40,39 +41,52 @@ le = LabelEncoder()
 y_encoded = le.fit_transform(y)
 y_categorical = to_categorical(y_encoded)
 
+# Data augmentation function
+def augment_data(X, y):
+    aug_X = []
+    aug_y = []
+    for i in range(len(X)):
+        mfccs = X[i]
+        label = y[i]
+        
+        # Original
+        aug_X.append(mfccs)
+        aug_y.append(label)
+        
+        # Time shifting
+        time_shift = np.roll(mfccs, shift=int(mfccs.shape[1] * 0.1), axis=1)
+        aug_X.append(time_shift)
+        aug_y.append(label)
+        
+        # Add noise
+        noise = np.random.normal(0, 0.01, mfccs.shape)
+        noisy_mfccs = mfccs + noise
+        aug_X.append(noisy_mfccs)
+        aug_y.append(label)
+        
+        # Pitch shifting can be added similarly if applicable
+        
+    return np.array(aug_X), np.array(aug_y)
+
+X_aug, y_aug = augment_data(X, y_categorical)
+
 # Split the data into training and test sets
-X_train, X_test, y_train, y_test = train_test_split(X, y_categorical, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X_aug, y_aug, test_size=0.2, random_state=42)
 
-# Build the model
-model = Sequential()
-model.add(Input(shape=X_train.shape[1:]))
-model.add(Conv2D(32, kernel_size=(3, 3), activation='relu'))
-model.add(BatchNormalization())
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Dropout(0.25))
-
-model.add(Conv2D(64, kernel_size=(3, 3), activation='relu'))
-model.add(BatchNormalization())
-model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Dropout(0.25))
-
-model.add(Flatten())
-model.add(Dense(128, activation='relu'))
-model.add(BatchNormalization())
-model.add(Dropout(0.5))
-model.add(Dense(y_categorical.shape[1], activation='softmax'))
+# Load the existing model
+model = load_model(curr_model_path)
 
 # Compile the model
-optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
+optimizer = tf.keras.optimizers.Adam(learning_rate=0.0002)
 model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
 
 # Callbacks
-early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
+early_stopping = EarlyStopping(monitor='val_loss', patience=20, restore_best_weights=True)
 model_checkpoint = ModelCheckpoint('bird_sound_model_best.keras', save_best_only=True)
-reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr=1e-6)
+reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=10, min_lr=1e-6)
 
 # Train the model
-model.fit(X_train, y_train, batch_size=32, epochs=50, verbose=1, validation_data=(X_test, y_test),
+model.fit(X_train, y_train, batch_size=64, epochs=100, verbose=1, validation_data=(X_test, y_test),
           callbacks=[early_stopping, model_checkpoint, reduce_lr])
 
 # Evaluate the model
@@ -81,4 +95,4 @@ print(f'Test loss: {score[0]}')
 print(f'Test accuracy: {score[1]}')
 
 # Save the final model
-model.save('bird_sound_model_final.keras')
+model.save('bird_sound_model_final1.keras')
