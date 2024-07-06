@@ -7,9 +7,9 @@ def main_menu():
     print("3. Generate Recording Statistics - Optional")
     print("4. Filter Recordings")
     print("5. Download Recordings")
-    print("6. Create Spectrograms")
-    print("7. Preprocess Data")
-    print("8. Train and Save Model")
+    print("6. Preprocess Data")
+    print("7. Train and Save Model")
+    print("8. Test Predict")
     print("9. Exit")
 
 def execute_script(script_name):
@@ -32,11 +32,11 @@ if __name__ == "__main__":
         elif choice == '5':
             execute_script('src/download')
         elif choice == '6':
-            execute_script('src/spectrograms')
-        elif choice == '7':
             execute_script('src/preprocess')
-        elif choice == '8':
+        elif choice == '7':
             execute_script("src/train")
+        elif choice == '8':
+            execute_script("src/predict")
         elif choice == '9':
             print("Exiting the program.")
             break

@@ -4,5 +4,5 @@
 /processed_mfccs
 /tables
 /heatmaps
-bird_sound_model_final.keras
-bird_sound_model_best.keras
+*.keras
+
