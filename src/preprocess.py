@@ -14,12 +14,22 @@ def load_audio(file_path):
         return None, None
 
 def reduce_noise(y, sr):
-    y_reduced = nr.reduce_noise(y=y, sr=sr)
-    return y_reduced
+    try:
+        y_reduced = nr.reduce_noise(y=y, sr=sr)
+        return y_reduced
+    except Exception as e:
+        print(f"Error reducing noise: {e}")
+        return y
 
 def normalize_audio(y):
-    y_normalized = librosa.util.normalize(y)
-    return y_normalized
+    try:
+        if not np.all(np.isfinite(y)):
+            raise ValueError("Non-finite values detected in audio data")
+        y_normalized = librosa.util.normalize(y)
+        return y_normalized
+    except Exception as e:
+        print(f"Error normalizing audio: {e}")
+        return y
 
 def extract_mfcc(y, sr, n_mfcc=13):
     try:
@@ -51,6 +61,13 @@ def preprocess_audio(file_info):
 
     y_reduced = reduce_noise(y, sr)
     y_normalized = normalize_audio(y_reduced)
+    if y_normalized is None:
+        with lock:
+            progress_percentage = (progress['completed'] / total_files) * 100
+            print(f"Normalization failed for file {file_name}. Skipping.")
+            print(f"Processed {progress['completed']}/{total_files} files \n({progress_percentage:.2f}% complete)")
+        return
+
     mfccs = extract_mfcc(y_normalized, sr)
     if mfccs is None:
         with lock:

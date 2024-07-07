@@ -4,14 +4,12 @@ import tensorflow as tf
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from tensorflow.keras.utils import to_categorical
-from tensorflow.keras.models import Sequential, load_model
-from tensorflow.keras.layers import Dense, Dropout, Flatten, BatchNormalization, Input
-from tensorflow.keras.layers import Conv2D, MaxPooling2D
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Dropout, Flatten, BatchNormalization, Conv2D, MaxPooling2D
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 data_folder = os.path.join(current_dir, '../processed_mfccs')
-curr_model_path = os.path.join(current_dir, '../bird_sound_model_final.keras')
 
 # Load the data
 def load_data(data_folder):
@@ -73,8 +71,27 @@ X_aug, y_aug = augment_data(X, y_categorical)
 # Split the data into training and test sets
 X_train, X_test, y_train, y_test = train_test_split(X_aug, y_aug, test_size=0.2, random_state=42)
 
-# Load the existing model
-model = load_model(curr_model_path)
+# Create the model
+model = Sequential([
+    Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=X_train.shape[1:]),
+    MaxPooling2D(pool_size=(2, 2)),
+    BatchNormalization(),
+    
+    Conv2D(64, kernel_size=(3, 3), activation='relu'),
+    MaxPooling2D(pool_size=(2, 2)),
+    BatchNormalization(),
+    
+    Conv2D(128, kernel_size=(3, 3), activation='relu'),
+    MaxPooling2D(pool_size=(2, 2)),
+    BatchNormalization(),
+    
+    Flatten(),
+    Dense(256, activation='relu'),
+    Dropout(0.5),
+    BatchNormalization(),
+    
+    Dense(len(le.classes_), activation='softmax')
+])
 
 # Compile the model
 optimizer = tf.keras.optimizers.Adam(learning_rate=0.0002)
@@ -95,4 +112,4 @@ print(f'Test loss: {score[0]}')
 print(f'Test accuracy: {score[1]}')
 
 # Save the final model
-model.save('bird_sound_model_final1.keras')
+model.save('bird_sound_model_final.keras')
