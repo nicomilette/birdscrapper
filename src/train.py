@@ -15,6 +15,9 @@ import config
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 data_folder = os.path.join(current_dir, '../processed_mfccs')
+label_encoder_path = os.path.join(current_dir, '../model/label_encoder.joblib')
+model_best_path = os.path.join(current_dir, '../model/bird_sound_model_best.keras')
+model_final_path = os.path.join(current_dir, '../model/bird_sound_model_final.keras')
 
 # Load the data
 def load_data(data_folder, max_allowed_length=500):
@@ -60,7 +63,6 @@ y_encoded = le.fit_transform(y)
 y_categorical = to_categorical(y_encoded)
 
 # Save the label encoder
-label_encoder_path = os.path.join(current_dir, '../model/label_encoder.joblib')
 os.makedirs(os.path.dirname(label_encoder_path), exist_ok=True)
 joblib.dump(le, label_encoder_path)
 
@@ -69,9 +71,9 @@ def augment_data(X, y, data_folder, max_len=500):
     aug_X = []
     aug_y = []
     # augmenter = am.Compose([  # Uncomment this if you have the audiomentations library
-    #     am.AddBackgroundNoise(sounds_path="background_noises/", min_snr_in_db=0, max_snr_in_db=20, p=0.5),
-    #     am.TimeStretch(min_rate=0.8, max_rate=1.25, p=0.5),
-    #     am.PitchShift(min_semitones=-4, max_semitones=4, p=0.5)
+    #     am.AddBackgroundNoise(sounds_path=config.BACKGROUND_NOISE_PATH, min_snr_in_db=config.MIN_SNR_IN_DB, max_snr_in_db=config.MAX_SNR_IN_DB, p=config.AUGMENTATION_PROBABILITY),
+    #     am.TimeStretch(min_rate=config.TIME_STRETCH_MIN_RATE, max_rate=config.TIME_STRETCH_MAX_RATE, p=config.AUGMENTATION_PROBABILITY),
+    #     am.PitchShift(min_semitones=-config.PITCH_SHIFT_SEMITONES, max_semitones=config.PITCH_SHIFT_SEMITONES, p=config.AUGMENTATION_PROBABILITY)
     # ])
     
     for i in range(len(X)):
@@ -107,7 +109,7 @@ def augment_data(X, y, data_folder, max_len=500):
 X_aug, y_aug = augment_data(X, y_categorical, data_folder, max_len)
 
 # Split the data into training and test sets
-X_train, X_test, y_train, y_test = train_test_split(X_aug, y_aug, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X_aug, y_aug, test_size=config.TEST_SIZE, random_state=config.RANDOM_STATE)
 
 # Create the model
 input_shape = (X_train.shape[1], X_train.shape[2], X_train.shape[3])
@@ -152,13 +154,12 @@ optimizer = tf.keras.optimizers.Adam(learning_rate=config.LEARNING_RATE)
 model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
 
 # Callbacks
-early_stopping = EarlyStopping(monitor='val_loss', patience=20, restore_best_weights=True)
-check_dest = os.path.join(current_dir, '../model/bird_sound_model_best.keras') 
-model_checkpoint = ModelCheckpoint(check_dest, save_best_only=True)
-reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=10, min_lr=1e-6)
+early_stopping = EarlyStopping(monitor='val_loss', patience=config.PATIENCE_EARLY_STOPPING, restore_best_weights=True)
+model_checkpoint = ModelCheckpoint(model_best_path, save_best_only=True)
+reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=config.FACTOR_REDUCE_LR, patience=config.PATIENCE_REDUCE_LR, min_lr=config.MIN_LR)
 
 # Train the model
-model.fit(X_train, y_train, batch_size=128, epochs=config.EPOCHS, verbose=1, validation_data=(X_test, y_test),
+model.fit(X_train, y_train, batch_size=config.BATCH_SIZE, epochs=config.EPOCHS, verbose=1, validation_data=(X_test, y_test),
           callbacks=[early_stopping, model_checkpoint, reduce_lr])
 
 # Evaluate the model
@@ -167,5 +168,4 @@ print(f'Test loss: {score[0]}')
 print(f'Test accuracy: {score[1]}')
 
 # Save the final model
-save_dest = os.path.join(current_dir, '../model/bird_sound_model_final.keras')
-model.save(save_dest)
+model.save(model_final_path)

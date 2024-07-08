@@ -1,22 +1,30 @@
 # GENERATION SETTINGS
 EPOCHS = 100
 LEARNING_RATE = 0.0005
+BATCH_SIZE = 128
+TEST_SIZE = 0.2
+RANDOM_STATE = 42
+PATIENCE_EARLY_STOPPING = 20
+PATIENCE_REDUCE_LR = 10
+FACTOR_REDUCE_LR = 0.5
+MIN_LR = 1e-6
+
+# AUGMENTATION SETTINGS
+MIN_SNR_IN_DB = 0
+MAX_SNR_IN_DB = 20
+PITCH_SHIFT_SEMITONES = 4
+TIME_STRETCH_MIN_RATE = 0.8
+TIME_STRETCH_MAX_RATE = 1.25
+AUGMENTATION_PROBABILITY = 0.5
 
 
-
-
-# Path to the CSV file used for the heatmap
+# EVALUATION SETTINGS
 CSV_FILE_PATH_HEATMAP = '../tables/bird_recordings_unfiltered.csv'
-# Path to the CSV file used for the statistics
 CSV_FILE_PATH_STATS = '../tables/bird_recordings_filtered.csv'
-#Path to the model used in prediction
-TEST_MODEL = '../model/bird_sound_model_final.keras'
+TEST_MODEL_PATH = '../model/bird_sound_model_final.keras'
 
-# Statistics thresholds and parameters
+# STATISTICS THRESHOLDS AND PARAMETERS
 MIN_RECORDINGS_THRESHOLD = 50
 FIGURE_SIZE = (10, 6)
 BAR_COLOR = 'blue'
 ROTATION = 90
-
-
-
