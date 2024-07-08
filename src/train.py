@@ -1,10 +1,12 @@
 import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'  # Disable oneDNN custom operations
 import numpy as np
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from tensorflow.keras.utils import to_categorical
-from tensorflow.keras.models import Sequential
+from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.layers import Dense, Dropout, Flatten, BatchNormalization, Conv2D, MaxPooling2D, Input
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
 from tensorflow.keras.regularizers import l2
@@ -12,6 +14,8 @@ import joblib
 import librosa
 import config
 # import audiomentations as am  # Uncomment this if you have the audiomentations library
+
+
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 data_folder = os.path.join(current_dir, '../processed_mfccs')
@@ -40,11 +44,6 @@ def load_data(data_folder, max_allowed_length=500):
     print()  # Move to the next line after completing the loop
     return X, y
 
-X, y = load_data(data_folder)
-
-# Cap the maximum length to a reasonable value
-max_len = 500  # For example, you can set it to 500
-
 # Pad or truncate the MFCC arrays to the same length manually
 def pad_or_truncate(mfccs, max_len):
     if mfccs.shape[1] < max_len:
@@ -52,19 +51,6 @@ def pad_or_truncate(mfccs, max_len):
         return np.pad(mfccs, ((0, 0), (0, pad_width)), mode='constant')
     else:
         return mfccs[:, :max_len]
-
-X_padded = [pad_or_truncate(mfcc, max_len) for mfcc in X]
-X = np.array(X_padded, dtype='float32')
-
-# Preprocess the data
-X = X[..., np.newaxis]  # Add a new axis for the channel dimension
-le = LabelEncoder()
-y_encoded = le.fit_transform(y)
-y_categorical = to_categorical(y_encoded)
-
-# Save the label encoder
-os.makedirs(os.path.dirname(label_encoder_path), exist_ok=True)
-joblib.dump(le, label_encoder_path)
 
 # Data augmentation function
 def augment_data(X, y, data_folder, max_len=500):
@@ -106,67 +92,113 @@ def augment_data(X, y, data_folder, max_len=500):
 
     return np.array(aug_X), np.array(aug_y)
 
-X_aug, y_aug = augment_data(X, y_categorical, data_folder, max_len)
+# Function to create a new model
+def create_model(input_shape):
+    model = Sequential([
+        Input(shape=input_shape),
+        Conv2D(64, kernel_size=(3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.005)),  # Increased from 32 to 64
+        MaxPooling2D(pool_size=(2, 2), padding='same'),
+        BatchNormalization(),
+        Dropout(0.3),
 
-# Split the data into training and test sets
-X_train, X_test, y_train, y_test = train_test_split(X_aug, y_aug, test_size=config.TEST_SIZE, random_state=config.RANDOM_STATE)
+        Conv2D(128, kernel_size=(3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.005)),  # Increased from 64 to 128
+        MaxPooling2D(pool_size=(2, 2), padding='same'),
+        BatchNormalization(),
+        Dropout(0.3),
 
-# Create the model
-input_shape = (X_train.shape[1], X_train.shape[2], X_train.shape[3])
+        Conv2D(256, kernel_size=(3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.005)),  # Increased from 128 to 256
+        MaxPooling2D(pool_size=(2, 2), padding='same'),
+        BatchNormalization(),
+        Dropout(0.3),
 
-model = Sequential([
-    Input(shape=input_shape),
-    Conv2D(64, kernel_size=(3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.005)),  # Increased from 32 to 64
-    MaxPooling2D(pool_size=(2, 2), padding='same'),
-    BatchNormalization(),
-    Dropout(0.3),
+        Conv2D(512, kernel_size=(3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.005)),  # Increased from 256 to 512
+        MaxPooling2D(pool_size=(2, 2), padding='same'),
+        BatchNormalization(),
+        Dropout(0.3),
 
-    Conv2D(128, kernel_size=(3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.005)),  # Increased from 64 to 128
-    MaxPooling2D(pool_size=(2, 2), padding='same'),
-    BatchNormalization(),
-    Dropout(0.3),
+        Conv2D(1024, kernel_size=(3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.005)),  # Added new layer with 1024 filters
+        MaxPooling2D(pool_size=(2, 2), padding='same'),
+        BatchNormalization(),
+        Dropout(0.3),
 
-    Conv2D(256, kernel_size=(3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.005)),  # Increased from 128 to 256
-    MaxPooling2D(pool_size=(2, 2), padding='same'),
-    BatchNormalization(),
-    Dropout(0.3),
+        Flatten(),
+        Dense(1024, activation='relu', kernel_regularizer=l2(0.005)),  # Increased from 512 to 1024
+        Dropout(0.4),
+        BatchNormalization(),
 
-    Conv2D(512, kernel_size=(3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.005)),  # Increased from 256 to 512
-    MaxPooling2D(pool_size=(2, 2), padding='same'),
-    BatchNormalization(),
-    Dropout(0.3),
+        Dense(len(le.classes_), activation='softmax')
+    ])
 
-    Conv2D(1024, kernel_size=(3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.005)),  # Added new layer with 1024 filters
-    MaxPooling2D(pool_size=(2, 2), padding='same'),
-    BatchNormalization(),
-    Dropout(0.3),
+    # Compile the model
+    optimizer = tf.keras.optimizers.Adam(learning_rate=config.LEARNING_RATE)
+    model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
+    
+    return model
 
-    Flatten(),
-    Dense(1024, activation='relu', kernel_regularizer=l2(0.005)),  # Increased from 512 to 1024
-    Dropout(0.4),
-    BatchNormalization(),
+# Menu for user to choose training options
+def main():
+    print("Select an option:")
+    print("1. Train a new model")
+    print("2. Continue training an existing model")
 
-    Dense(len(le.classes_), activation='softmax')
-])
+    choice = input("Enter choice (1 or 2): ")
 
+    if choice == '1':
+        if os.path.exists(model_best_path) or os.path.exists(model_final_path):
+            confirm = input("Are you sure you want to overwrite the existing model? (yes/no): ")
+            if confirm.lower() != 'yes':
+                print("Operation cancelled.")
+                return
+        print("Training a new model...")
+        model = create_model((X_train.shape[1], X_train.shape[2], X_train.shape[3]))
+    elif choice == '2':
+        if not os.path.exists(model_final_path):
+            print("No existing model found. Training a new model instead.")
+            model = create_model((X_train.shape[1], X_train.shape[2], X_train.shape[3]))
+        else:
+            print("Continuing training on the existing model...")
+            model = load_model(model_final_path)
+    else:
+        print("Invalid choice.")
+        return
 
-# Compile the model
-optimizer = tf.keras.optimizers.Adam(learning_rate=config.LEARNING_RATE)
-model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
+    # Load and preprocess data
+    print("Loading and preprocessing data...")
+    X, y = load_data(data_folder)
+    X_padded = [pad_or_truncate(mfcc, max_len) for mfcc in X]
+    X = np.array(X_padded, dtype='float32')
+    X = X[..., np.newaxis]  # Add a new axis for the channel dimension
 
-# Callbacks
-early_stopping = EarlyStopping(monitor='val_loss', patience=config.PATIENCE_EARLY_STOPPING, restore_best_weights=True)
-model_checkpoint = ModelCheckpoint(model_best_path, save_best_only=True)
-reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=config.FACTOR_REDUCE_LR, patience=config.PATIENCE_REDUCE_LR, min_lr=config.MIN_LR)
+    le = LabelEncoder()
+    y_encoded = le.fit_transform(y)
+    y_categorical = to_categorical(y_encoded)
 
-# Train the model
-model.fit(X_train, y_train, batch_size=config.BATCH_SIZE, epochs=config.EPOCHS, verbose=1, validation_data=(X_test, y_test),
-          callbacks=[early_stopping, model_checkpoint, reduce_lr])
+    # Save the label encoder
+    os.makedirs(os.path.dirname(label_encoder_path), exist_ok=True)
+    joblib.dump(le, label_encoder_path)
 
-# Evaluate the model
-score = model.evaluate(X_test, y_test, verbose=0)
-print(f'Test loss: {score[0]}')
-print(f'Test accuracy: {score[1]}')
+    # Augment data
+    X_aug, y_aug = augment_data(X, y_categorical, data_folder, max_len)
 
-# Save the final model
-model.save(model_final_path)
+    # Split the data into training and test sets
+    X_train, X_test, y_train, y_test = train_test_split(X_aug, y_aug, test_size=config.TEST_SIZE, random_state=config.RANDOM_STATE)
+
+    # Callbacks
+    early_stopping = EarlyStopping(monitor='val_loss', patience=config.PATIENCE_EARLY_STOPPING, restore_best_weights=True)
+    model_checkpoint = ModelCheckpoint(model_best_path, save_best_only=True)
+    reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=config.FACTOR_REDUCE_LR, patience=config.PATIENCE_REDUCE_LR, min_lr=config.MIN_LR)
+
+    # Train the model
+    model.fit(X_train, y_train, batch_size=config.BATCH_SIZE, epochs=config.EPOCHS, verbose=1, validation_data=(X_test, y_test),
+              callbacks=[early_stopping, model_checkpoint, reduce_lr])
+
+    # Evaluate the model
+    score = model.evaluate(X_test, y_test, verbose=0)
+    print(f'Test loss: {score[0]}')
+    print(f'Test accuracy: {score[1]}')
+
+    # Save the final model
+    model.save(model_final_path)
+
+if __name__ == '__main__':
+    main()
