@@ -8,9 +8,10 @@ def main_menu():
     print("4. Filter Recordings")
     print("5. Download Recordings")
     print("6. Preprocess Data")
-    print("7. Train and Save Model")
-    print("8. Test Predict")
-    print("9. Exit")
+    print("7. Verify Files")
+    print("8. Train and Save Model")
+    print("9. Test Predict")
+    print("0. Exit")
 
 def execute_script(script_name):
     command = f"python {script_name}.py"
@@ -19,7 +20,7 @@ def execute_script(script_name):
 if __name__ == "__main__":
     while True:
         main_menu()
-        choice = input("Enter your choice (1-9): ")
+        choice = input("Enter your choice (0-9): ")
 
         if choice == '1':
             execute_script('src/scrape')
@@ -34,10 +35,12 @@ if __name__ == "__main__":
         elif choice == '6':
             execute_script('src/preprocess')
         elif choice == '7':
-            execute_script("src/train")
+            execute_script("src/verify")
         elif choice == '8':
-            execute_script("src/predict")
+            execute_script("src/train")
         elif choice == '9':
+            execute_script("src/predict")
+        elif choice == '0':
             print("Exiting the program.")
             break
         else:

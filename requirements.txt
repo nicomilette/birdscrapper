@@ -8,3 +8,5 @@ tensorflow
 noisereduce
 scikit-image
 folium
+joblib
+audiomentations
