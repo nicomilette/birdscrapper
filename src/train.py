@@ -113,46 +113,51 @@ input_shape = (X_train.shape[1], X_train.shape[2], X_train.shape[3])
 
 model = Sequential([
     Input(shape=input_shape),
-    Conv2D(32, kernel_size=(3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.01)),
+    Conv2D(32, kernel_size=(3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.005)),
     MaxPooling2D(pool_size=(2, 2), padding='same'),
     BatchNormalization(),
-    Dropout(0.4),
-    
-    Conv2D(64, kernel_size=(3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.01)),
+    Dropout(0.3),
+
+    Conv2D(64, kernel_size=(3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.005)),
     MaxPooling2D(pool_size=(2, 2), padding='same'),
     BatchNormalization(),
-    Dropout(0.4),
-    
-    Conv2D(128, kernel_size=(3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.01)),
+    Dropout(0.3),
+
+    Conv2D(128, kernel_size=(3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.005)),
     MaxPooling2D(pool_size=(2, 2), padding='same'),
     BatchNormalization(),
-    Dropout(0.4),
-    
-    Conv2D(256, kernel_size=(3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.01)),
+    Dropout(0.3),
+
+    Conv2D(256, kernel_size=(3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.005)),
     MaxPooling2D(pool_size=(2, 2), padding='same'),
     BatchNormalization(),
-    Dropout(0.4),
+    Dropout(0.3),
+
+    Conv2D(512, kernel_size=(3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.005)),
+    MaxPooling2D(pool_size=(2, 2), padding='same'),
+    BatchNormalization(),
+    Dropout(0.3),
 
     Flatten(),
-    Dense(512, activation='relu', kernel_regularizer=l2(0.01)),
-    Dropout(0.5),
+    Dense(512, activation='relu', kernel_regularizer=l2(0.005)),
+    Dropout(0.4),
     BatchNormalization(),
-    
+
     Dense(len(le.classes_), activation='softmax')
 ])
 
 # Compile the model
-optimizer = tf.keras.optimizers.Adam(learning_rate=0.0001)
+optimizer = tf.keras.optimizers.Adam(learning_rate=0.0005)
 model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
 
 # Callbacks
-early_stopping = EarlyStopping(monitor='val_loss', patience=15, restore_best_weights=True)
+early_stopping = EarlyStopping(monitor='val_loss', patience=20, restore_best_weights=True)
 check_dest = os.path.join(current_dir, '../model/bird_sound_model_best.keras') 
 model_checkpoint = ModelCheckpoint(check_dest, save_best_only=True)
-reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr=1e-6)
+reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=10, min_lr=1e-6)
 
 # Train the model
-model.fit(X_train, y_train, batch_size=32, epochs=50, verbose=1, validation_data=(X_test, y_test),
+model.fit(X_train, y_train, batch_size=128, epochs=25, verbose=1, validation_data=(X_test, y_test),
           callbacks=[early_stopping, model_checkpoint, reduce_lr])
 
 # Evaluate the model
