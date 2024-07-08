@@ -14,7 +14,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 # Load the CSV file
 print("Generating heatmap...")
 
-file_path = os.path.join(current_dir, config.CSV_UNFILTERED)
+file_path = os.path.join(current_dir, config.CSV_FILE_PATH_HEATMAP)
 bird_data = pd.read_csv(file_path)
 
 # Check for missing latitude and longitude and drop those rows
@@ -30,7 +30,7 @@ HeatMap(heat_data).add_to(base_map)
 
 # Save the map as an HTML file
 
-html_file_path = os.path.join(current_dir, config.HEATMAP_FILE)
+html_file_path = os.path.join(current_dir, '../heatmaps/bird_recordings_heatmap.html')
 directory = os.path.dirname(html_file_path)
 if directory:
     os.makedirs(directory, exist_ok=True)  # Ensure the directory exists

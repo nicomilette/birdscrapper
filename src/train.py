@@ -10,6 +10,7 @@ from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLRO
 from tensorflow.keras.regularizers import l2
 import joblib
 import librosa
+import config
 # import audiomentations as am  # Uncomment this if you have the audiomentations library
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -147,7 +148,7 @@ model = Sequential([
 ])
 
 # Compile the model
-optimizer = tf.keras.optimizers.Adam(learning_rate=0.0005)
+optimizer = tf.keras.optimizers.Adam(learning_rate=config.LEARNING_RATE)
 model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
 
 # Callbacks
@@ -157,7 +158,7 @@ model_checkpoint = ModelCheckpoint(check_dest, save_best_only=True)
 reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=10, min_lr=1e-6)
 
 # Train the model
-model.fit(X_train, y_train, batch_size=128, epochs=25, verbose=1, validation_data=(X_test, y_test),
+model.fit(X_train, y_train, batch_size=128, epochs=config.EPOCHS, verbose=1, validation_data=(X_test, y_test),
           callbacks=[early_stopping, model_checkpoint, reduce_lr])
 
 # Evaluate the model

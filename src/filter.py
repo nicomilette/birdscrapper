@@ -33,7 +33,7 @@ def save_to_csv(data, filename):
 def main():
     current_dir = os.path.dirname(os.path.abspath(__file__))
 
-    file_path = os.path.join(current_dir, config.CSV_UNFILTERED)
+    file_path = os.path.join(current_dir, '../tables/bird_recordings_unfiltered.csv')
 
     # Load the unfiltered data
     if not os.path.exists(file_path):
@@ -44,7 +44,7 @@ def main():
     # Filter the data
     filtered_data = filter_recordings(bird_data)
 
-    output_path = os.path.join(current_dir, config.CSV_FILTERED)
+    output_path = os.path.join(current_dir, '../tables/bird_recordings_filtered.csv')
 
     # Save the filtered data to the new CSV file
     save_to_csv(filtered_data, output_path)
