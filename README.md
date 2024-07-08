@@ -3,13 +3,12 @@
 
 ## Description
 
-These scripts are designed to scrape bird call recordings, generate spectrograms, and train an AI model to classify bird calls based on these recordings. The scripts implement different stages of data processing, analysis, and model training.
+These scripts are designed to scrape bird call recordings, and train an AI model to classify bird calls based on these recordings. The scripts implement different stages of data processing, analysis, and model training.
 
 ## Features
 
 - **Data Scraping**: Fetch bird call recordings from the xeno-canto API.
 - **Data Analysis**: Generate and display statistics about the bird recordings.
-- **Spectrogram Generation**: Convert audio recordings into spectrogram images.
 - **Data Cleaning**: Filter and clean the dataset for training.
 - **Model Training**: Train a convolutional neural network (CNN) to classify bird calls based on spectrogram images.
 
