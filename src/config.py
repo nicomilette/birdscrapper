@@ -20,7 +20,7 @@ AUGMENTATION_PROBABILITY = 0.5
 # EVALUATION SETTINGS
 CSV_FILE_PATH_HEATMAP = '../tables/bird_recordings_unfiltered.csv'
 CSV_FILE_PATH_STATS = '../tables/bird_recordings_filtered.csv'
-TEST_MODEL_PATH = '../model/bird_sound_model_final.keras'
+TEST_MODEL = '../model/bird_sound_model_final.keras'
 
 # STATISTICS THRESHOLDS AND PARAMETERS
 MIN_RECORDINGS_THRESHOLD = 50
