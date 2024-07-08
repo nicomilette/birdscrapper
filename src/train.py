@@ -116,38 +116,39 @@ input_shape = (X_train.shape[1], X_train.shape[2], X_train.shape[3])
 
 model = Sequential([
     Input(shape=input_shape),
-    Conv2D(32, kernel_size=(3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.005)),
+    Conv2D(64, kernel_size=(3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.005)),  # Increased from 32 to 64
     MaxPooling2D(pool_size=(2, 2), padding='same'),
     BatchNormalization(),
     Dropout(0.3),
 
-    Conv2D(64, kernel_size=(3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.005)),
+    Conv2D(128, kernel_size=(3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.005)),  # Increased from 64 to 128
     MaxPooling2D(pool_size=(2, 2), padding='same'),
     BatchNormalization(),
     Dropout(0.3),
 
-    Conv2D(128, kernel_size=(3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.005)),
+    Conv2D(256, kernel_size=(3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.005)),  # Increased from 128 to 256
     MaxPooling2D(pool_size=(2, 2), padding='same'),
     BatchNormalization(),
     Dropout(0.3),
 
-    Conv2D(256, kernel_size=(3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.005)),
+    Conv2D(512, kernel_size=(3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.005)),  # Increased from 256 to 512
     MaxPooling2D(pool_size=(2, 2), padding='same'),
     BatchNormalization(),
     Dropout(0.3),
 
-    Conv2D(512, kernel_size=(3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.005)),
+    Conv2D(1024, kernel_size=(3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.005)),  # Added new layer with 1024 filters
     MaxPooling2D(pool_size=(2, 2), padding='same'),
     BatchNormalization(),
     Dropout(0.3),
 
     Flatten(),
-    Dense(512, activation='relu', kernel_regularizer=l2(0.005)),
+    Dense(1024, activation='relu', kernel_regularizer=l2(0.005)),  # Increased from 512 to 1024
     Dropout(0.4),
     BatchNormalization(),
 
     Dense(len(le.classes_), activation='softmax')
 ])
+
 
 # Compile the model
 optimizer = tf.keras.optimizers.Adam(learning_rate=config.LEARNING_RATE)
