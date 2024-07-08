@@ -60,6 +60,7 @@ y_categorical = to_categorical(y_encoded)
 
 # Save the label encoder
 label_encoder_path = os.path.join(current_dir, '../model/label_encoder.joblib')
+os.makedirs(os.path.dirname(label_encoder_path), exist_ok=True)
 joblib.dump(le, label_encoder_path)
 
 # Data augmentation function
@@ -113,22 +114,22 @@ input_shape = (X_train.shape[1], X_train.shape[2], X_train.shape[3])
 model = Sequential([
     Input(shape=input_shape),
     Conv2D(32, kernel_size=(3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.01)),
-    MaxPooling2D(pool_size=(2, 2)),
+    MaxPooling2D(pool_size=(2, 2), padding='same'),
     BatchNormalization(),
     Dropout(0.4),
     
     Conv2D(64, kernel_size=(3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.01)),
-    MaxPooling2D(pool_size=(2, 2)),
+    MaxPooling2D(pool_size=(2, 2), padding='same'),
     BatchNormalization(),
     Dropout(0.4),
     
     Conv2D(128, kernel_size=(3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.01)),
-    MaxPooling2D(pool_size=(2, 2)),
+    MaxPooling2D(pool_size=(2, 2), padding='same'),
     BatchNormalization(),
     Dropout(0.4),
     
     Conv2D(256, kernel_size=(3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.01)),
-    MaxPooling2D(pool_size=(2, 2)),
+    MaxPooling2D(pool_size=(2, 2), padding='same'),
     BatchNormalization(),
     Dropout(0.4),
 
@@ -146,7 +147,8 @@ model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['ac
 
 # Callbacks
 early_stopping = EarlyStopping(monitor='val_loss', patience=15, restore_best_weights=True)
-model_checkpoint = ModelCheckpoint('bird_sound_model_best.keras', save_best_only=True)
+check_dest = os.path.join(current_dir, '../model/bird_sound_model_best.keras') 
+model_checkpoint = ModelCheckpoint(check_dest, save_best_only=True)
 reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr=1e-6)
 
 # Train the model
@@ -159,7 +161,5 @@ print(f'Test loss: {score[0]}')
 print(f'Test accuracy: {score[1]}')
 
 # Save the final model
-
-
 save_dest = os.path.join(current_dir, '../model/bird_sound_model_final.keras')
 model.save(save_dest)

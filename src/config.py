@@ -18,6 +18,10 @@ FIGURE_SIZE = (10, 6)
 BAR_COLOR = 'blue'
 ROTATION = 90
 
+
+#Model to be used in predict.py
+TEST_MODEL = '../model/bird_sound_model_final.keras'
+
 # Additional statistics
 SPECIES_WITH_MAX_LATITUDE = 'species_with_max_latitude'
 SPECIES_WITH_MIN_LONGITUDE = 'species_with_min_longitude'

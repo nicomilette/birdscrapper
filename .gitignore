@@ -4,5 +4,8 @@
 /processed_mfccs
 /tables
 /heatmaps
+/model
 *.keras
+
+/src/__pycache__
 
