@@ -1,6 +1,7 @@
 import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
-os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'  # Disable oneDNN custom operations
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # Suppress TensorFlow logging
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'  # Disable oneDNN custom operations (optional)
+
 import numpy as np
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
@@ -14,8 +15,6 @@ import joblib
 import librosa
 import config
 # import audiomentations as am  # Uncomment this if you have the audiomentations library
-
-
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 data_folder = os.path.join(current_dir, '../processed_mfccs')
@@ -53,7 +52,7 @@ def pad_or_truncate(mfccs, max_len):
         return mfccs[:, :max_len]
 
 # Data augmentation function
-def augment_data(X, y, data_folder, max_len=500):
+def augment_data(X, y, data_folder, max_len, le):
     aug_X = []
     aug_y = []
     # augmenter = am.Compose([  # Uncomment this if you have the audiomentations library
@@ -143,6 +142,8 @@ def main():
 
     choice = input("Enter choice (1 or 2): ")
 
+    max_len = 500  # Define max_len within the function
+
     if choice == '1':
         if os.path.exists(model_best_path) or os.path.exists(model_final_path):
             confirm = input("Are you sure you want to overwrite the existing model? (yes/no): ")
@@ -150,14 +151,11 @@ def main():
                 print("Operation cancelled.")
                 return
         print("Training a new model...")
-        model = create_model((X_train.shape[1], X_train.shape[2], X_train.shape[3]))
     elif choice == '2':
         if not os.path.exists(model_final_path):
             print("No existing model found. Training a new model instead.")
-            model = create_model((X_train.shape[1], X_train.shape[2], X_train.shape[3]))
         else:
             print("Continuing training on the existing model...")
-            model = load_model(model_final_path)
     else:
         print("Invalid choice.")
         return
@@ -178,10 +176,15 @@ def main():
     joblib.dump(le, label_encoder_path)
 
     # Augment data
-    X_aug, y_aug = augment_data(X, y_categorical, data_folder, max_len)
+    X_aug, y_aug = augment_data(X, y_categorical, data_folder, max_len, le)
 
     # Split the data into training and test sets
     X_train, X_test, y_train, y_test = train_test_split(X_aug, y_aug, test_size=config.TEST_SIZE, random_state=config.RANDOM_STATE)
+
+    if choice == '1' or not os.path.exists(model_final_path):
+        model = create_model((X_train.shape[1], X_train.shape[2], X_train.shape[3]))
+    else:
+        model = load_model(model_final_path)
 
     # Callbacks
     early_stopping = EarlyStopping(monitor='val_loss', patience=config.PATIENCE_EARLY_STOPPING, restore_best_weights=True)
