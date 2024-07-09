@@ -14,7 +14,7 @@ def main_menu():
     print("0. Exit")
 
 def execute_script(script_name):
-    command = f"python {script_name}.py"
+    command = f"python3 {script_name}.py"
     os.system(command)
 
 if __name__ == "__main__":
