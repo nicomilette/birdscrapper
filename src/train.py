@@ -1,14 +1,15 @@
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # Suppress TensorFlow logging
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'  # Disable oneDNN custom operations (optional)
+os.environ['TF_DISABLE_XLA'] = '1'  # Disable XLA
 
 import numpy as np
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from tensorflow.keras.utils import to_categorical
-from tensorflow.keras.models import Sequential, load_model
-from tensorflow.keras.layers import Dense, Dropout, Flatten, BatchNormalization, Conv2D, MaxPooling2D, Input
+from tensorflow.keras.models import Sequential, load_model, Model
+from tensorflow.keras.layers import Dense, Dropout, Flatten, BatchNormalization, Conv2D, MaxPooling2D, Input, Add
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
 from tensorflow.keras.regularizers import l2
 import joblib
@@ -91,41 +92,22 @@ def augment_data(X, y, data_folder, max_len, le):
 
     return np.array(aug_X), np.array(aug_y)
 
-# Function to create a new model
-def create_model(input_shape):
+# Simplified model
+def create_simple_model(input_shape, num_classes):
     model = Sequential([
-        Input(shape=input_shape),
-        Conv2D(64, kernel_size=(3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.005)),  # Increased from 32 to 64
-        MaxPooling2D(pool_size=(2, 2), padding='same'),
-        BatchNormalization(),
+        Conv2D(32, kernel_size=(3, 3), activation='relu', padding='same', input_shape=input_shape),
+        MaxPooling2D(pool_size=(2, 2)),
         Dropout(0.3),
 
-        Conv2D(128, kernel_size=(3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.005)),  # Increased from 64 to 128
-        MaxPooling2D(pool_size=(2, 2), padding='same'),
-        BatchNormalization(),
-        Dropout(0.3),
-
-        Conv2D(256, kernel_size=(3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.005)),  # Increased from 128 to 256
-        MaxPooling2D(pool_size=(2, 2), padding='same'),
-        BatchNormalization(),
-        Dropout(0.3),
-
-        Conv2D(512, kernel_size=(3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.005)),  # Increased from 256 to 512
-        MaxPooling2D(pool_size=(2, 2), padding='same'),
-        BatchNormalization(),
-        Dropout(0.3),
-
-        Conv2D(1024, kernel_size=(3, 3), activation='relu', padding='same', kernel_regularizer=l2(0.005)),  # Added new layer with 1024 filters
-        MaxPooling2D(pool_size=(2, 2), padding='same'),
-        BatchNormalization(),
+        Conv2D(64, kernel_size=(3, 3), activation='relu', padding='same'),
+        MaxPooling2D(pool_size=(2, 2)),
         Dropout(0.3),
 
         Flatten(),
-        Dense(1024, activation='relu', kernel_regularizer=l2(0.005)),  # Increased from 512 to 1024
+        Dense(128, activation='relu'),
         Dropout(0.4),
-        BatchNormalization(),
-
-        Dense(len(le.classes_), activation='softmax')
+        
+        Dense(num_classes, activation='softmax')
     ])
 
     # Compile the model
@@ -181,8 +163,10 @@ def main():
     # Split the data into training and test sets
     X_train, X_test, y_train, y_test = train_test_split(X_aug, y_aug, test_size=config.TEST_SIZE, random_state=config.RANDOM_STATE)
 
+    num_classes = len(le.classes_)
+    
     if choice == '1' or not os.path.exists(model_final_path):
-        model = create_model((X_train.shape[1], X_train.shape[2], X_train.shape[3]))
+        model = create_simple_model((X_train.shape[1], X_train.shape[2], X_train.shape[3]), num_classes)
     else:
         model = load_model(model_final_path)
 

@@ -1,7 +1,7 @@
 # GENERATION SETTINGS
 EPOCHS = 100
-LEARNING_RATE = 0.0005
-BATCH_SIZE = 64  
+LEARNING_RATE = 1e-3
+BATCH_SIZE = 128
 TEST_SIZE = 0.2
 RANDOM_STATE = 42
 PATIENCE_EARLY_STOPPING = 20
@@ -17,10 +17,15 @@ TIME_STRETCH_MIN_RATE = 0.8
 TIME_STRETCH_MAX_RATE = 1.25
 AUGMENTATION_PROBABILITY = 0.5
 
+# DATA SETTINGS
+LABEL_ENCODER_PATH = '../model/label_encoder.joblib'
+MODEL_BEST_PATH = '../model/bird_sound_model_best.keras'
+MODEL_FINAL_PATH = '../model/bird_sound_model_final.keras'
+
 # EVALUATION SETTINGS
 CSV_FILE_PATH_HEATMAP = '../tables/bird_recordings_unfiltered.csv'
 CSV_FILE_PATH_STATS = '../tables/bird_recordings_filtered.csv'
-TEST_MODEL = '../model/bird_sound_model_final.keras'
+TEST_MODEL_PATH = '../model/bird_sound_model_final.keras'
 
 # STATISTICS THRESHOLDS AND PARAMETERS
 MIN_RECORDINGS_THRESHOLD = 50
