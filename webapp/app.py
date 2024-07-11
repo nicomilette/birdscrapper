@@ -1,6 +1,6 @@
 import os
 import logging
-from flask import Flask, render_template, request, jsonify, send_file, send_from_directory
+from flask import Flask, render_template, request, jsonify, send_from_directory
 
 app = Flask(__name__)
 
@@ -100,6 +100,14 @@ def discard_recording():
     with open(DISCARDED_FILE, 'a') as df:
         df.write(f"{audio_file}\n")
     return jsonify(success=True)
+
+@app.route('/stats')
+def get_stats():
+    species_stats = {
+        species: get_species_stats(species)
+        for species in get_species_list()
+    }
+    return jsonify(species_stats)
 
 if __name__ == '__main__':
     app.run(debug=True)
