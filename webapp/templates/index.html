@@ -105,7 +105,7 @@
 </head>
 <body>
     <div class="fixed-menu" id="fixed-menu">
-        <p id="complete-species-count">Species 20/20: 0</p>
+        <p id="complete-species-count">Completed: 0/0</p>
     </div>
     <div class="fixed-container" id="fixed-container">
         <button onclick="showSpeciesList()">Back to Species</button>
@@ -113,9 +113,10 @@
         <p id="total-recordings"></p>
         <p id="selection-info"></p>
     </div>
+    <input type="hidden" id="last-viewed-species" value="">
     <div class="container grid-container species-container" id="species-container">
         {% for species, stats in species_stats.items() %}
-            <div class="species-tile">
+            <div class="species-tile" id="{{ species }}">
                 <h3>{{ species }}</h3>
                 <p>Approved: {{ stats.selected }} / 20</p>
                 <p>Discarded: {{ stats.discarded }}</p>
@@ -136,6 +137,7 @@
         const totalRecordingsElement = document.getElementById('total-recordings');
         const selectionInfoElement = document.getElementById('selection-info');
         const completeSpeciesCountElement = document.getElementById('complete-species-count');
+        const lastViewedSpeciesInput = document.getElementById('last-viewed-species');
 
         function showSpeciesList() {
             fetch('/stats')
@@ -143,12 +145,14 @@
                 .then(stats => {
                     speciesContainer.innerHTML = '';
                     let completeCount = 0;
+                    let totalSpecies = Object.keys(stats).length; // Total number of species
                     for (const [species, data] of Object.entries(stats)) {
                         if (data.selected === 20) {
                             completeCount++;
                         }
                         const tile = document.createElement('div');
                         tile.classList.add('species-tile');
+                        tile.id = species; // Add an id to each species tile
                         tile.innerHTML = `
                             <h3>${species}</h3>
                             <p>Approved: ${data.selected} / 20</p>
@@ -157,7 +161,17 @@
                         `;
                         speciesContainer.appendChild(tile);
                     }
-                    completeSpeciesCountElement.textContent = `Species 20/20: ${completeCount}`;
+                    completeSpeciesCountElement.textContent = `Completed: ${completeCount}/${totalSpecies}`;
+
+                    // Scroll to the last viewed species
+                    const lastViewedSpecies = lastViewedSpeciesInput.value;
+                    if (lastViewedSpecies) {
+                        const element = document.getElementById(lastViewedSpecies);
+                        if (element) {
+                            element.scrollIntoView();
+                            window.scrollBy(0, -100);
+                        }
+                    }
                 });
 
             recordingsContainer.style.display = 'none';
@@ -168,18 +182,23 @@
         }
 
         function showRecordings(species) {
+            // Scroll to the top
+            window.scrollTo(0, 0);
+            
             speciesContainer.style.display = 'none';
             recordingsContainer.style.display = 'block';
             fixedContainer.style.display = 'block'; // Show the fixed container when viewing recordings
             fixedMenu.style.display = 'none'; // Hide the fixed menu when viewing recordings
             speciesNameElement.textContent = species;
 
+            lastViewedSpeciesInput.value = species; // Store the last viewed species
+
             fetch(`/audio/${species}`)
             .then(response => response.json())
             .then(data => {
                 const container = document.getElementById('audio-container');
                 container.innerHTML = '';
-                totalRecordingsElement.textContent = `Total Recordings: ${data.audio_files.length}`;
+                totalRecordingsElement.textContent = `Total Recordings: ${data.audio_files.length + data.selected + data.discarded}`;
                 selectionInfoElement.innerHTML = `Approved: ${data.selected} / 20<br>Discarded: ${data.discarded}`;
                 data.audio_files.forEach(item => {
                     const div = document.createElement('div');
