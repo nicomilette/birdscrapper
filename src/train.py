@@ -93,7 +93,7 @@ def augment_data(X, y, data_folder, max_len, le):
     return np.array(aug_X), np.array(aug_y)
 
 # Simplified model
-def create_simple_model(input_shape, num_classes):
+def create_model(input_shape, num_classes):
     model = Sequential([
         Conv2D(32, kernel_size=(3, 3), activation='relu', padding='same', input_shape=input_shape),
         MaxPooling2D(pool_size=(2, 2)),
@@ -166,7 +166,7 @@ def main():
     num_classes = len(le.classes_)
     
     if choice == '1' or not os.path.exists(model_final_path):
-        model = create_simple_model((X_train.shape[1], X_train.shape[2], X_train.shape[3]), num_classes)
+        model = create_model((X_train.shape[1], X_train.shape[2], X_train.shape[3]), num_classes)
     else:
         model = load_model(model_final_path)
 
