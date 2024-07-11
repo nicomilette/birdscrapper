@@ -101,6 +101,11 @@
         .button-discard:hover {
             background-color: #d32f2f;
         }
+        .button-disabled {
+            background-color: #888888;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
@@ -120,7 +125,7 @@
                 <h3>{{ species }}</h3>
                 <p>Approved: {{ stats.selected }} / 20</p>
                 <p>Discarded: {{ stats.discarded }}</p>
-                <button onclick="showRecordings('{{ species }}')">View Recordings</button>
+                <button onclick="showRecordings('{{ species }}')" class="{{ 'button-disabled' if stats.selected == 20 else '' }}">View Recordings</button>
             </div>
         {% endfor %}
     </div>
@@ -157,7 +162,8 @@
                             <h3>${species}</h3>
                             <p>Approved: ${data.selected} / 20</p>
                             <p>Discarded: ${data.discarded}</p>
-                            <button onclick="showRecordings('${species}')">View Recordings</button>
+                            <button onclick="showRecordings('${species}')" style="${data.selected === 20 ? 'background-color: #888888;' : ''}">View Recordings</button>
+
                         `;
                         speciesContainer.appendChild(tile);
                     }

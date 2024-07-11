@@ -47,3 +47,5 @@ Zone-tailed Hawk_604824.mp3
 Zone-tailed Hawk_604825.mp3
 Acadian Flycatcher_101952.mp3
 Alder Flycatcher_101413.mp3
+Song Sparrow_125718.mp3
+Song Sparrow_1268.mp3
