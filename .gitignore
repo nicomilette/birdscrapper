@@ -12,3 +12,4 @@
 /webapp/static/spectrograms
 /webapp/spectrograms
 webapp/selected.txt
+webapp/discarded.txt
