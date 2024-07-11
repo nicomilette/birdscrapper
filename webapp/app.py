@@ -68,7 +68,12 @@ def index():
 @app.route('/audio/<species>')
 def get_audio_files(species):
     audio_files = get_filtered_audio_files(species)
-    audio_data = [{'audio_file': audio_file, 'audio_path': f'/audio_files/{audio_file}'} for audio_file in audio_files]
+    stats = get_species_stats(species)
+    audio_data = {
+        'audio_files': [{'audio_file': audio_file, 'audio_path': f'/audio_files/{audio_file}'} for audio_file in audio_files],
+        'selected': stats['selected'],
+        'discarded': stats['discarded']
+    }
     return jsonify(audio_data)
 
 @app.route('/audio_files/<path:filename>')
@@ -108,6 +113,10 @@ def get_stats():
         for species in get_species_list()
     }
     return jsonify(species_stats)
+
+@app.route('/stats/<species>')
+def get_species_stats_endpoint(species):
+    return jsonify(get_species_stats(species))
 
 if __name__ == '__main__':
     app.run(debug=True)

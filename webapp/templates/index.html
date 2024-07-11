@@ -16,8 +16,18 @@
         .container {
             padding: 20px;
         }
-        .counter {
-            margin-bottom: 20px;
+        .fixed-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: #121212;
+            padding: 10px 20px;
+            z-index: 1000;
+            display: none; /* Hide by default */
+        }
+        .grid-container {
+            padding-top: 250px; /* Height of the fixed container + some spacing */
         }
         .species-container, .audio-container {
             display: grid;
@@ -83,85 +93,86 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="counter" id="counter"></div>
-        <div class="species-container" id="species-container">
-            {% for species, stats in species_stats.items() %}
-                <div class="species-tile">
-                    <h3>{{ species }}</h3>
-                    <p>Approved: {{ stats.selected }} / 20</p>
-                    <p>Discarded: {{ stats.discarded }}</p>
-                    <p>Total recordings: {{ stats.total }}</p>
-                    <button onclick="showRecordings('{{ species }}')">View Recordings</button>
-                </div>
-            {% endfor %}
-        </div>
-    </div>
-    <div class="container" id="recordings-container" style="display: none;">
+    <div class="fixed-container" id="fixed-container">
         <button onclick="showSpeciesList()">Back to Species</button>
         <h2 id="species-name"></h2>
+        <p id="total-recordings"></p>
+        <p id="selection-info"></p>
+    </div>
+    <div class="container grid-container species-container" id="species-container">
+        {% for species, stats in species_stats.items() %}
+            <div class="species-tile">
+                <h3>{{ species }}</h3>
+                <p>Approved: {{ stats.selected }} / 20</p>
+                <p>Discarded: {{ stats.discarded }}</p>
+                <button onclick="showRecordings('{{ species }}')">View Recordings</button>
+            </div>
+        {% endfor %}
+    </div>
+    <div class="container grid-container" id="recordings-container" style="display: none;">
         <div id="audio-container" class="audio-container"></div>
     </div>
 
     <script>
         const speciesContainer = document.getElementById('species-container');
         const recordingsContainer = document.getElementById('recordings-container');
+        const fixedContainer = document.getElementById('fixed-container');
         const speciesNameElement = document.getElementById('species-name');
-        const counterElement = document.getElementById('counter');
+        const totalRecordingsElement = document.getElementById('total-recordings');
+        const selectionInfoElement = document.getElementById('selection-info');
 
         function showSpeciesList() {
             fetch('/stats')
                 .then(response => response.json())
                 .then(stats => {
                     speciesContainer.innerHTML = '';
-                    let completedCount = 0;
                     for (const [species, data] of Object.entries(stats)) {
-                        if (data.selected === 20) {
-                            completedCount++;
-                        }
                         const tile = document.createElement('div');
                         tile.classList.add('species-tile');
                         tile.innerHTML = `
                             <h3>${species}</h3>
                             <p>Approved: ${data.selected} / 20</p>
                             <p>Discarded: ${data.discarded}</p>
-                            <p>Total recordings: ${data.total}</p>
                             <button onclick="showRecordings('${species}')">View Recordings</button>
                         `;
                         speciesContainer.appendChild(tile);
                     }
-                    counterElement.textContent = `${completedCount} species have 20/20 recordings selected`;
                 });
 
             recordingsContainer.style.display = 'none';
             speciesContainer.style.display = 'grid';
+            fixedContainer.style.display = 'none'; // Hide the fixed container when viewing species list
         }
 
         function showRecordings(species) {
             speciesContainer.style.display = 'none';
             recordingsContainer.style.display = 'block';
+            fixedContainer.style.display = 'block'; // Show the fixed container when viewing recordings
             speciesNameElement.textContent = species;
 
             fetch(`/audio/${species}`)
-                .then(response => response.json())
-                .then(data => {
-                    const container = document.getElementById('audio-container');
-                    container.innerHTML = '';
-                    data.forEach(item => {
-                        const div = document.createElement('div');
-                        div.classList.add('audio-file');
-                        div.innerHTML = `
-                            <audio controls>
-                                <source src="${item.audio_path}" type="audio/mpeg">
-                                Your browser does not support the audio element.
-                            </audio>
-                            <img src="/spectrograms/${item.audio_file.replace('.mp3', '.png')}" alt="Spectrogram">
-                            <button class="button-select" onclick="selectRecording('${species}', '${item.audio_file}', this)">Select</button>
-                            <button class="button-discard" onclick="discardRecording('${species}', '${item.audio_file}', this)">Discard</button>
-                        `;
-                        container.appendChild(div);
-                    });
+            .then(response => response.json())
+            .then(data => {
+                const container = document.getElementById('audio-container');
+                container.innerHTML = '';
+                totalRecordingsElement.textContent = `Total Recordings: ${data.audio_files.length}`;
+                selectionInfoElement.innerHTML = `Approved: ${data.selected} / 20<br>Discarded: ${data.discarded}`;
+                data.audio_files.forEach(item => {
+                    const div = document.createElement('div');
+                    div.classList.add('audio-file');
+                    div.innerHTML = `
+                        <audio controls>
+                            <source src="${item.audio_path}" type="audio/mpeg">
+                            Your browser does not support the audio element.
+                        </audio>
+                        <img src="/spectrograms/${item.audio_file.replace('.mp3', '.png')}" alt="Spectrogram">
+                        <button class="button-select" onclick="selectRecording('${species}', '${item.audio_file}', this)">Select</button>
+                        <button class="button-discard" onclick="discardRecording('${species}', '${item.audio_file}', this)">Discard</button>
+                    `;
+                    container.appendChild(div);
                 });
+            });
+
         }
 
         function selectRecording(species, audio_file, button) {
@@ -176,6 +187,7 @@
             .then(data => {
                 if (data.success) {
                     button.closest('.audio-file').remove();
+                    updateSelectionInfo(species);
                 } else {
                     alert(data.error);
                 }
@@ -194,12 +206,22 @@
             .then(data => {
                 if (data.success) {
                     button.closest('.audio-file').remove();
+                    updateSelectionInfo(species);
                 } else {
                     alert(data.error);
                 }
             });
         }
 
+        function updateSelectionInfo(species) {
+            fetch(`/stats/${species}`)
+                .then(response => response.json())
+                .then(data => {
+                    selectionInfoElement.innerHTML = `Approved: ${data.selected} / 20<br>Discarded: ${data.discarded}`;
+                });
+        }
+
+        // Initial call to load species list
         showSpeciesList();
     </script>
 </body>
