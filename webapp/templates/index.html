@@ -26,9 +26,20 @@
             z-index: 1000;
             display: none; /* Hide by default */
         }
-        .grid-container {
-            padding-top: 250px; /* Height of the fixed container + some spacing */
+        .fixed-menu {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: #121212;
+            padding: 10px 20px;
+            z-index: 1000;
+            display: block; /* Show by default */
         }
+        .grid-container {
+            padding-top: 250px; /* Height of the fixed containers + some spacing */
+        }
+        
         .species-container, .audio-container {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -93,6 +104,9 @@
     </style>
 </head>
 <body>
+    <div class="fixed-menu" id="fixed-menu">
+        <p id="complete-species-count">Species 20/20: 0</p>
+    </div>
     <div class="fixed-container" id="fixed-container">
         <button onclick="showSpeciesList()">Back to Species</button>
         <h2 id="species-name"></h2>
@@ -117,16 +131,22 @@
         const speciesContainer = document.getElementById('species-container');
         const recordingsContainer = document.getElementById('recordings-container');
         const fixedContainer = document.getElementById('fixed-container');
+        const fixedMenu = document.getElementById('fixed-menu');
         const speciesNameElement = document.getElementById('species-name');
         const totalRecordingsElement = document.getElementById('total-recordings');
         const selectionInfoElement = document.getElementById('selection-info');
+        const completeSpeciesCountElement = document.getElementById('complete-species-count');
 
         function showSpeciesList() {
             fetch('/stats')
                 .then(response => response.json())
                 .then(stats => {
                     speciesContainer.innerHTML = '';
+                    let completeCount = 0;
                     for (const [species, data] of Object.entries(stats)) {
+                        if (data.selected === 20) {
+                            completeCount++;
+                        }
                         const tile = document.createElement('div');
                         tile.classList.add('species-tile');
                         tile.innerHTML = `
@@ -137,17 +157,21 @@
                         `;
                         speciesContainer.appendChild(tile);
                     }
+                    completeSpeciesCountElement.textContent = `Species 20/20: ${completeCount}`;
                 });
 
             recordingsContainer.style.display = 'none';
             speciesContainer.style.display = 'grid';
+            speciesContainer.style.paddingTop = '100px';
             fixedContainer.style.display = 'none'; // Hide the fixed container when viewing species list
+            fixedMenu.style.display = 'block'; // Show the fixed menu when viewing species list
         }
 
         function showRecordings(species) {
             speciesContainer.style.display = 'none';
             recordingsContainer.style.display = 'block';
             fixedContainer.style.display = 'block'; // Show the fixed container when viewing recordings
+            fixedMenu.style.display = 'none'; // Hide the fixed menu when viewing recordings
             speciesNameElement.textContent = species;
 
             fetch(`/audio/${species}`)
